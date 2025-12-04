@@ -513,10 +513,10 @@ const TaskView: React.FC = () => {
                       </button>
                       {activeDropdown === 'priority' && (
                           <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-lg p-1 z-50 w-32 animate-in fade-in zoom-in-95 duration-200">
-                             {['high', 'medium', 'low', 'none'].map(p => (
+                             {(['high', 'medium', 'low', 'none'] as const).map(p => (
                                  <button 
                                     key={p}
-                                    onClick={() => { setInputPriority(p as any); setActiveDropdown(null); }}
+                                    onClick={() => { setInputPriority(p); setActiveDropdown(null); }}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded flex items-center gap-2"
                                  >
                                      <Flag size={14} className={p === 'high' ? 'text-red-500' : p === 'medium' ? 'text-amber-500' : p === 'low' ? 'text-blue-500' : 'text-gray-400'} />
