@@ -75,6 +75,8 @@ const TaskView: React.FC = () => {
   // State: Drag and Drop
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverListId, setDragOverListId] = useState<string | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
+  const [dragPosition, setDragPosition] = useState<'top' | 'bottom' | null>(null);
 
   // State: Bulk Actions
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -133,21 +135,51 @@ const TaskView: React.FC = () => {
     }
     setDraggedTaskId(taskId);
     e.dataTransfer.effectAllowed = 'move';
+    // Set a transparent drag image or keep default
+    // const img = new Image(); img.src = ''; e.dataTransfer.setDragImage(img, 0, 0);
   };
 
-  const handleTaskDrop = (e: React.DragEvent, targetTaskId: string) => {
+  const handleTaskDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault(); // Necessary to allow dropping
+    if (isSelectionMode || draggedTaskId === targetId) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const position = e.clientY < midY ? 'top' : 'bottom';
+
+    setDragOverTaskId(targetId);
+    setDragPosition(position);
+  };
+
+  const handleTaskDragLeave = () => {
+    setDragOverTaskId(null);
+    setDragPosition(null);
+  };
+
+  const handleTaskDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!draggedTaskId || draggedTaskId === targetTaskId || isSelectionMode) return;
+    setDragOverTaskId(null);
+    setDragPosition(null);
 
-    const updatedTasks = [...tasks];
-    const draggedIndex = updatedTasks.findIndex(t => t.id === draggedTaskId);
-    const targetIndex = updatedTasks.findIndex(t => t.id === targetTaskId);
+    if (!draggedTaskId || draggedTaskId === targetId || isSelectionMode) return;
 
-    if (draggedIndex > -1 && targetIndex > -1) {
-      const [movedTask] = updatedTasks.splice(draggedIndex, 1);
-      updatedTasks.splice(targetIndex, 0, movedTask);
-      setTasks(updatedTasks);
-    }
+    // Remove dragged task
+    const tasksWithoutDragged = tasks.filter(t => t.id !== draggedTaskId);
+    const draggedTask = tasks.find(t => t.id === draggedTaskId);
+    
+    if (!draggedTask) return;
+
+    // Find insertion index
+    const targetIndex = tasksWithoutDragged.findIndex(t => t.id === targetId);
+    if (targetIndex === -1) return;
+
+    let finalIndex = targetIndex;
+    if (dragPosition === 'bottom') finalIndex++;
+
+    const newTasks = [...tasksWithoutDragged];
+    newTasks.splice(finalIndex, 0, draggedTask);
+    
+    setTasks(newTasks);
     setDraggedTaskId(null);
   };
 
@@ -370,14 +402,14 @@ const TaskView: React.FC = () => {
             <BarChart2 size={12} /> 统计
           </h2>
           <div className="grid grid-cols-2 gap-3">
-             <div className="bg-sage-50 rounded-lg p-3 border border-sage-100">
+             <div className="bg-sage-50 rounded-lg p-3 border border-sage-100 cursor-help" title={`本周已完成 ${stats.weekly} 个任务`}>
                 <div className="text-xs text-sage-500 mb-1">本周</div>
                 <div className="text-2xl font-bold text-sage-700 flex items-end gap-1">
                   {stats.weekly}
                   <TrendingUp size={12} className="mb-1.5 text-sage-400" />
                 </div>
              </div>
-             <div className="bg-sage-50 rounded-lg p-3 border border-sage-100">
+             <div className="bg-sage-50 rounded-lg p-3 border border-sage-100 cursor-help" title={`本月已完成 ${stats.monthly} 个任务`}>
                 <div className="text-xs text-sage-500 mb-1">本月</div>
                 <div className="text-2xl font-bold text-sage-700">{stats.monthly}</div>
              </div>
@@ -541,7 +573,7 @@ const TaskView: React.FC = () => {
         {/* Task List */}
         <div className="flex-1 overflow-y-auto px-6 pb-6">
             {/* Active Tasks */}
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
                 {activeTasks.length === 0 && completedTasks.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                         <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4">
@@ -556,10 +588,25 @@ const TaskView: React.FC = () => {
                         key={task.id}
                         draggable={!isSelectionMode}
                         onDragStart={(e) => handleDragStart(e, task.id)}
-                        onDragOver={(e) => e.preventDefault()}
+                        onDragOver={(e) => handleTaskDragOver(e, task.id)}
+                        onDragLeave={handleTaskDragLeave}
                         onDrop={(e) => handleTaskDrop(e, task.id)}
-                        className={`group bg-white border border-gray-100 rounded-xl p-3 flex flex-col gap-2 transition-all hover:shadow-md hover:border-sage-200 ${draggedTaskId === task.id ? 'opacity-40' : ''}`}
+                        className={`group bg-white border rounded-xl p-3 flex flex-col gap-2 transition-all hover:shadow-md relative ${
+                            draggedTaskId === task.id ? 'opacity-30 scale-[0.98]' : 'opacity-100'
+                        } ${
+                           isSelectionMode 
+                              ? selectedTaskIds.has(task.id) ? 'border-sage-300 bg-sage-50/50' : 'border-gray-100' 
+                              : 'border-gray-100 hover:border-sage-200'
+                        }`}
                     >
+                        {/* Insertion Indicators */}
+                        {dragOverTaskId === task.id && dragPosition === 'top' && (
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-sage-500 rounded-full -mt-1.5 shadow-sm z-10 pointer-events-none"></div>
+                        )}
+                        {dragOverTaskId === task.id && dragPosition === 'bottom' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-sage-500 rounded-full -mb-1.5 shadow-sm z-10 pointer-events-none"></div>
+                        )}
+
                         <div className="flex items-start gap-3">
                             {isSelectionMode ? (
                                 <button 
