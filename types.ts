@@ -4,6 +4,7 @@ export enum Tab {
   NOTES = 'NOTES',
   POMODORO = 'POMODORO',
   COUNTDOWN = 'COUNTDOWN',
+  ANALYTICS = 'ANALYTICS',
   SETTINGS = 'SETTINGS'
 }
 

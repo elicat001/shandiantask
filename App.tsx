@@ -5,6 +5,7 @@ import CalendarView from './components/calendar/CalendarView';
 import NoteView from './components/notes/NoteView';
 import PomodoroView from './components/pomodoro/PomodoroView';
 import CountdownView from './components/countdown/CountdownView';
+import AnalyticsView from './components/analytics/AnalyticsView';
 import SettingsView from './components/settings/SettingsView';
 import { Tab } from './types';
 
@@ -23,6 +24,8 @@ const App: React.FC = () => {
         return <PomodoroView />;
       case Tab.COUNTDOWN:
         return <CountdownView />;
+      case Tab.ANALYTICS:
+        return <AnalyticsView />;
       case Tab.SETTINGS:
         return <SettingsView />;
       default:
