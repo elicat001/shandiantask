@@ -434,7 +434,7 @@ const SettingsView: React.FC = () => {
   return (
     <div className="h-full w-full bg-white flex flex-col">
         {/* Header (Secondary) */}
-        <div className="h-14 border-b border-gray-100 bg-gray-50 flex items-center px-8 flex-shrink-0">
+        <div className="hidden md:flex h-14 border-b border-gray-100 bg-gray-50 items-center px-8 flex-shrink-0">
              <div className="flex gap-8">
                  {['我的信息', '基本信息', '模块设置', '快捷键', '主题设置', '桌面小组件', '关注我们'].map((item) => (
                      <button key={item} className="text-sm text-gray-500 hover:text-sage-600 transition-colors font-medium relative group">
@@ -447,7 +447,7 @@ const SettingsView: React.FC = () => {
 
         <div className="flex flex-1 overflow-hidden">
             {/* Sidebar Navigation */}
-            <div className="w-64 bg-gray-50/50 border-r border-gray-100 flex-shrink-0 p-4 overflow-y-auto">
+            <div className="hidden md:block w-64 bg-gray-50/50 border-r border-gray-100 flex-shrink-0 p-4 overflow-y-auto">
                  <div className="space-y-1">
                     {menuItems.map((item) => (
                         <button 
@@ -467,7 +467,7 @@ const SettingsView: React.FC = () => {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-8 bg-white">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white">
                  {renderContent()}
             </div>
         </div>

@@ -144,7 +144,7 @@ const CalendarView: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-white w-full relative">
         {/* Header */}
-        <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0">
+        <div className="h-14 md:h-16 border-b border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-6 py-2 md:py-0 flex-shrink-0 gap-2 md:gap-0">
             <div className="flex items-center gap-4">
                  <h2 className="text-2xl font-semibold text-sage-700">
                     {year}-{String(month + 1).padStart(2, '0')}
@@ -161,7 +161,7 @@ const CalendarView: React.FC = () => {
                 </button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
                  <div className="flex bg-gray-100 rounded-lg p-1 text-sm">
                     {['Day', '3 Day', 'Week', 'Month'].map(v => (
                         <button key={v} className={`px-3 py-1 rounded-md transition-all ${v === 'Month' ? 'bg-white shadow text-sage-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -177,7 +177,7 @@ const CalendarView: React.FC = () => {
         {/* Calendar Grid Header */}
         <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50 flex-shrink-0">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wide">
+                <div key={day} className="py-2 md:py-3 text-center text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">
                     {day}
                 </div>
             ))}

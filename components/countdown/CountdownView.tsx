@@ -55,7 +55,7 @@ const CountdownView: React.FC = () => {
   return (
     <div className="h-full w-full bg-white flex flex-col">
        {/* Header with Form */}
-       <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0 gap-4 bg-white z-10">
+       <div className="h-14 md:h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-6 flex-shrink-0 gap-4 bg-white z-10">
           <h1 className="text-xl font-semibold text-gray-800 hidden sm:block flex-shrink-0">倒数日</h1>
           
           <form onSubmit={handleAdd} className="flex-1 max-w-2xl flex items-center gap-2">

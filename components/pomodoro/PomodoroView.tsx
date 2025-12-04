@@ -74,13 +74,13 @@ const PomodoroView: React.FC = () => {
         <div className="absolute top-10 flex bg-gray-100 p-1 rounded-full z-10">
             <button 
                 onClick={() => { setMode('focus'); setTimeLeft(focusDuration * 60); setIsActive(false); }}
-                className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${mode === 'focus' ? 'bg-white text-sage-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-4 md:px-6 py-1.5 rounded-full text-sm font-medium transition-all ${mode === 'focus' ? 'bg-white text-sage-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
                 专注
             </button>
             <button 
                 onClick={() => { setMode('break'); setTimeLeft(5 * 60); setIsActive(false); }}
-                className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${mode === 'break' ? 'bg-white text-sage-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-4 md:px-6 py-1.5 rounded-full text-sm font-medium transition-all ${mode === 'break' ? 'bg-white text-sage-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
                 休息
             </button>

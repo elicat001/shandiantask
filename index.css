@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Mobile bottom navigation spacing */
+@media (max-width: 767px) {
+  main {
+    padding-bottom: 70px;
+  }
+}
+
 /* Custom scrollbar for webkit */
 ::-webkit-scrollbar {
   width: 6px;

@@ -343,9 +343,9 @@ const TaskView: React.FC = () => {
   );
 
   return (
-    <div className="flex h-full w-full bg-white relative">
+    <div className="flex flex-col md:flex-row h-full w-full bg-white relative">
       {/* Sidebar List Navigation */}
-      <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-full flex-shrink-0">
+      <div className="hidden md:flex w-64 bg-gray-50 border-r border-gray-200 flex-col h-full flex-shrink-0">
         <div className="p-4 flex-shrink-0">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">智能清单</h2>
           <ul className="space-y-1">
@@ -420,7 +420,7 @@ const TaskView: React.FC = () => {
       {/* Main Task Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Header */}
-        <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0">
+        <div className="h-14 md:h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
              {listNameMap[activeListId] || activeListId} 
              <span className="text-sm font-normal text-gray-400">({activeTasks.length})</span>
