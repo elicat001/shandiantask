@@ -1,0 +1,5 @@
+{
+  "name": "TickTick Clone",
+  "description": "A comprehensive productivity application featuring task management, calendar, notes, pomodoro timer, and AI-powered task parsing.",
+  "requestFramePermissions": []
+}
