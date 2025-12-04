@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Flame, Target, Calendar, CheckCircle, Circle, Trophy, Star,
-  TrendingUp, Heart, Brain, Zap, Users, Sparkles, Play, Pause,
-  RotateCcw, ChevronLeft, ChevronRight, Sun, Moon, Coffee,
-  Book, Dumbbell, MessageCircle, PenTool, Music, Timer
+  Flame, Target, Calendar, CheckCircle, Trophy, Star,
+  Heart, Brain, Zap, Sun, Moon, Coffee, Plus, X, Edit2, Trash2,
+  Book, Dumbbell, MessageCircle, PenTool, Music, Timer, Briefcase, Home, Smile
 } from 'lucide-react';
 import { Challenge, DailyHabit, DayProgress } from '../../types';
 
