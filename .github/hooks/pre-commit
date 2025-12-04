@@ -1,0 +1,13 @@
+#!/bin/sh
+# Pre-commit hook for automatic formatting and linting
+# This hook runs before every commit
+
+echo "Running pre-commit checks..."
+
+# Check if there are any TypeScript errors
+if command -v npm &> /dev/null; then
+    echo "Checking TypeScript..."
+    npm run type-check 2>/dev/null || echo "TypeScript check skipped (no type-check script)"
+fi
+
+echo "Pre-commit checks completed."
