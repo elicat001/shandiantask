@@ -1,32 +1,49 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) || '';
-const ai = new GoogleGenAI({ apiKey });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+
+let genAI: GoogleGenerativeAI | null = null;
+
+const getGenAI = () => {
+  if (!apiKey) {
+    console.warn('Gemini API Key 未配置');
+    return null;
+  }
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  return genAI;
+};
 
 export const parseTaskWithAI = async (input: string) => {
-  if (!apiKey) return null;
+  const ai = getGenAI();
+  if (!ai) return null;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `Parse the following task input into a structured JSON object. 
-      Current Date: ${new Date().toISOString()}.
-      Input: "${input}"`,
-      config: {
+    const model = ai.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
+          type: SchemaType.OBJECT,
           properties: {
-            title: { type: Type.STRING },
-            dueDate: { type: Type.STRING, description: "ISO date string or null" },
-            priority: { type: Type.STRING, enum: ["none", "low", "medium", "high"] },
-            tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+            title: { type: SchemaType.STRING },
+            dueDate: { type: SchemaType.STRING, description: "ISO date string or null" },
+            priority: { type: SchemaType.STRING, enum: ["none", "low", "medium", "high"] },
+            tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } }
           }
         }
       }
     });
-    
-    return JSON.parse(response.text || '{}');
+
+    const currentDate = new Date().toISOString();
+    const prompt = 'Parse the following task input into a structured JSON object. Current Date: ' + currentDate + '. Input: "' + input + '"';
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    return JSON.parse(text || '{}');
   } catch (error) {
     console.error("Gemini Parse Error:", error);
     return null;
@@ -34,16 +51,18 @@ export const parseTaskWithAI = async (input: string) => {
 };
 
 export const summarizeNoteWithAI = async (content: string) => {
-  if (!apiKey) return "API Key missing";
+  const ai = getGenAI();
+  if (!ai) return "API Key 未配置";
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `Summarize the following note content in one concise sentence: "${content}"`
-    });
-    return response.text;
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = 'Summarize the following note content in one concise sentence: "' + content + '"';
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    return response.text();
   } catch (error) {
     console.error("Gemini Summary Error:", error);
-    return "Failed to summarize";
+    return "摘要生成失败";
   }
 };
