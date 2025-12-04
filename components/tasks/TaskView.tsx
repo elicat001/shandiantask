@@ -1,65 +1,34 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Plus, Search, MoreHorizontal, Calendar as CalendarIcon, Hash, Flag, Inbox, 
-  LayoutGrid, ListFilter, ArrowRight, AlertCircle, X, Check, GripVertical, 
+import {
+  Plus, Search, MoreHorizontal, Calendar as CalendarIcon, Hash, Flag, Inbox,
+  LayoutGrid, ListFilter, ArrowRight, AlertCircle, X, Check, GripVertical,
   BarChart2, TrendingUp, CornerDownRight, ChevronRight, ChevronDown, Clock,
   Trash2, CheckSquare, Square, Tag, XCircle
 } from 'lucide-react';
 import { Task, List, SubTask } from '../../types';
 import { parseTaskWithAI } from '../../services/geminiService';
+import { useStore, getFilteredTasks } from '../../store/useStore';
 
 const TaskView: React.FC = () => {
-  // State: Tasks
-  const [tasks, setTasks] = useState<Task[]>([
-    { 
-      id: '1', 
-      title: '购买杂货', 
-      completed: false, 
-      listId: 'inbox', 
-      priority: 'high', 
-      tags: ['个人'], 
-      dueDate: new Date(new Date().setDate(new Date().getDate() - 1)), // Overdue
-      subtasks: [
-        { id: 's1', title: '牛奶', completed: true },
-        { id: 's2', title: '鸡蛋', completed: false }
-      ]
-    },
-    { 
-      id: '2', 
-      title: '完成 React 项目', 
-      completed: false, 
-      listId: 'work', 
-      priority: 'medium', 
-      tags: ['开发'], 
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 2)),
-      subtasks: []
-    },
-    { 
-      id: '3', 
-      title: '晨跑 5 公里', 
-      completed: true, 
-      completedDate: new Date(), 
-      listId: 'personal', 
-      priority: 'low', 
-      tags: ['健康'],
-      subtasks: [] 
-    },
-    {
-      id: '4',
-      title: '阅读技术博客',
-      completed: true,
-      completedDate: new Date(new Date().setDate(new Date().getDate() - 10)), // Completed earlier this month
-      listId: 'work',
-      priority: 'low',
-      tags: ['学习'],
-      subtasks: []
-    }
-  ]);
+  // Global State from Zustand
+  const tasks = useStore((state) => state.tasks);
+  const lists = useStore((state) => state.lists);
+  const activeListId = useStore((state) => state.activeListId);
+  const setActiveListId = useStore((state) => state.setActiveList);
+  const addTask = useStore((state) => state.addTask);
+  const updateTask = useStore((state) => state.updateTask);
+  const deleteTask = useStore((state) => state.deleteTask);
+  const toggleTask = useStore((state) => state.toggleTask);
+  const loadTasks = useStore((state) => state.loadTasks);
+
+  // Load tasks on mount
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   // State: Input & Parsing
   const [inputValue, setInputValue] = useState('');
   const [isParsing, setIsParsing] = useState(false);
-  const [activeListId, setActiveListId] = useState('inbox');
 
   // State: Enhanced Input Toolbar
   const [inputPriority, setInputPriority] = useState<'none' | 'low' | 'medium' | 'high'>('none');
@@ -106,7 +75,7 @@ const TaskView: React.FC = () => {
     // Start of current week (Sunday)
     const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
-    
+
     // Start of current month
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -163,23 +132,8 @@ const TaskView: React.FC = () => {
 
     if (!draggedTaskId || draggedTaskId === targetId || isSelectionMode) return;
 
-    // Remove dragged task
-    const tasksWithoutDragged = tasks.filter(t => t.id !== draggedTaskId);
-    const draggedTask = tasks.find(t => t.id === draggedTaskId);
-    
-    if (!draggedTask) return;
-
-    // Find insertion index
-    const targetIndex = tasksWithoutDragged.findIndex(t => t.id === targetId);
-    if (targetIndex === -1) return;
-
-    let finalIndex = targetIndex;
-    if (dragPosition === 'bottom') finalIndex++;
-
-    const newTasks = [...tasksWithoutDragged];
-    newTasks.splice(finalIndex, 0, draggedTask);
-    
-    setTasks(newTasks);
+    // TODO: Implement task reordering in Zustand store
+    // For now, just reset drag state
     setDraggedTaskId(null);
   };
 
@@ -188,9 +142,7 @@ const TaskView: React.FC = () => {
     setDragOverListId(null);
     if (!draggedTaskId || isSelectionMode) return;
 
-    setTasks(tasks.map(t => 
-      t.id === draggedTaskId ? { ...t, listId: targetListId } : t
-    ));
+    updateTask(draggedTaskId, { listId: targetListId });
     setDraggedTaskId(null);
   };
 
@@ -219,7 +171,7 @@ const TaskView: React.FC = () => {
       subtasks: []
     };
 
-    setTasks([newTask, ...tasks]);
+    addTask(newTask);
     setInputValue('');
     // Reset toolbar
     setInputPriority('none');
@@ -227,19 +179,7 @@ const TaskView: React.FC = () => {
     setInputDueDate(null);
   };
 
-  const toggleTask = (taskId: string) => {
-    setTasks(tasks.map(t => {
-      if (t.id === taskId) {
-        const isCompleting = !t.completed;
-        return { 
-          ...t, 
-          completed: isCompleting, 
-          completedDate: isCompleting ? new Date() : undefined 
-        };
-      }
-      return t;
-    }));
-  };
+  // toggleTask is now handled by Zustand store
 
   // --- Bulk Actions ---
   const toggleSelection = (taskId: string) => {
@@ -260,53 +200,53 @@ const TaskView: React.FC = () => {
   };
 
   const handleBulkDelete = () => {
-    setTasks(tasks.filter(t => !selectedTaskIds.has(t.id)));
+    Array.from(selectedTaskIds).forEach(id => deleteTask(id));
     setSelectedTaskIds(new Set());
     setIsSelectionMode(false);
   };
 
   const handleBulkComplete = () => {
-    setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, completed: true, completedDate: new Date() } : t));
+    Array.from(selectedTaskIds).forEach(id => {
+      const task = tasks.find(t => t.id === id);
+      if (task && !task.completed) toggleTask(id);
+    });
     setSelectedTaskIds(new Set());
     setIsSelectionMode(false);
   };
 
   const handleBulkTag = (tag: string) => {
-    setTasks(tasks.map(t => {
-      if (selectedTaskIds.has(t.id)) {
-        const currentTags = t.tags || [];
+    Array.from(selectedTaskIds).forEach(id => {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        const currentTags = task.tags || [];
         if (!currentTags.includes(tag)) {
-          return { ...t, tags: [...currentTags, tag] };
+          updateTask(id, { tags: [...currentTags, tag] });
         }
       }
-      return t;
-    }));
+    });
     setShowBulkTagMenu(false);
   };
 
   // --- Subtask Management ---
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
-    setTasks(tasks.map(t => {
-      if (t.id !== taskId) return t;
-      const updatedSubtasks = t.subtasks?.map(st => 
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      const updatedSubtasks = task.subtasks?.map(st =>
         st.id === subtaskId ? { ...st, completed: !st.completed } : st
       );
-      return { ...t, subtasks: updatedSubtasks };
-    }));
+      updateTask(taskId, { subtasks: updatedSubtasks });
+    }
   };
 
   const handleAddSubtask = (taskId: string) => {
     if (!subtaskInput.trim()) return;
     const newSub: SubTask = { id: Date.now().toString(), title: subtaskInput, completed: false };
-    setTasks(tasks.map(t => 
-      t.id === taskId ? { ...t, subtasks: [...(t.subtasks || []), newSub] } : t
-    ));
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      updateTask(taskId, { subtasks: [...(task.subtasks || []), newSub] });
+    }
     setSubtaskInput('');
     setAddingSubtaskTo(null);
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
   };
 
   // --- UI Helpers ---
@@ -333,9 +273,10 @@ const TaskView: React.FC = () => {
     setInputTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
-  // Filter tasks
-  const activeTasks = tasks.filter(t => !t.completed && (activeListId === 'inbox' || t.listId === activeListId));
-  const completedTasks = tasks.filter(t => t.completed && (activeListId === 'inbox' || t.listId === activeListId));
+  // Filter tasks using the utility function from store
+  const filteredTasks = getFilteredTasks(tasks, activeListId);
+  const activeTasks = filteredTasks.filter(t => !t.completed);
+  const completedTasks = filteredTasks.filter(t => t.completed);
 
   // Filtered tags for dropdown
   const filteredTags = availableTags.filter(tag => 
