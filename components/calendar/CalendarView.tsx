@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings, Download, X, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { parseISO, startOfDay } from 'date-fns';
 import { CalendarEvent } from '../../types';
 
 const CalendarView: React.FC = () => {
@@ -43,9 +44,9 @@ const CalendarView: React.FC = () => {
       e.preventDefault();
       if (!newEvent.title || !newEvent.date) return;
 
-      const eventDate = new Date(newEvent.date);
+      const eventDate = parseISO(newEvent.date);
       // Adjust for time zone offset to keep the selected day accurate
-      const adjustedDate = new Date(eventDate.valueOf() + eventDate.getTimezoneOffset() * 60 * 1000);
+      const adjustedDate = startOfDay(eventDate);
 
       const createdEvent: CalendarEvent = {
           id: Date.now().toString(),
