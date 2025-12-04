@@ -4,6 +4,7 @@ export enum Tab {
   NOTES = 'NOTES',
   POMODORO = 'POMODORO',
   COUNTDOWN = 'COUNTDOWN',
+  CHALLENGE = 'CHALLENGE',
   ANALYTICS = 'ANALYTICS',
   SETTINGS = 'SETTINGS'
 }
@@ -47,4 +48,43 @@ export interface CalendarEvent {
   title: string;
   date: Date;
   type: 'task' | 'holiday';
+}
+// 50天挑战相关类型
+export interface DailyHabit {
+  id: string;
+  name: string;
+  icon: string;
+  category: 'health' | 'mind' | 'productivity' | 'social' | 'growth';
+  description: string;
+  isRequired: boolean;
+}
+
+export interface DayProgress {
+  day: number;
+  date: Date;
+  habits: {
+    habitId: string;
+    completed: boolean;
+    completedAt?: Date;
+    note?: string;
+  }[];
+  tasksCompleted: number;
+  pomodoroMinutes: number;
+  reflection?: string;
+  mood?: 1 | 2 | 3 | 4 | 5;
+  isRestDay: boolean;
+}
+
+export interface Challenge {
+  id: string;
+  name: string;
+  startDate: Date;
+  currentDay: number;
+  isActive: boolean;
+  habits: DailyHabit[];
+  progress: DayProgress[];
+  streakDays: number;
+  bestStreak: number;
+  totalTasksCompleted: number;
+  totalPomodoroMinutes: number;
 }
