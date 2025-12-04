@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Calendar, FileText, Timer, Clock, Settings, BarChart2, Flame } from 'lucide-react';
+import { CheckSquare, Calendar, FileText, Timer, Settings, BarChart2, Flame } from 'lucide-react';
 import Avatar from './common/Avatar';
 import { Tab } from '../types';
 
@@ -14,7 +14,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     { id: Tab.CALENDAR, icon: Calendar, label: '日历' },
     { id: Tab.NOTES, icon: FileText, label: '笔记' },
     { id: Tab.POMODORO, icon: Timer, label: '番茄' },
-    { id: Tab.COUNTDOWN, icon: Clock, label: '倒数日' },
     { id: Tab.CHALLENGE, icon: Flame, label: '挑战' },
     { id: Tab.ANALYTICS, icon: BarChart2, label: '分析' },
   ];

@@ -4,7 +4,6 @@ import TaskView from './components/tasks/TaskView';
 import CalendarView from './components/calendar/CalendarView';
 import NoteView from './components/notes/NoteView';
 import PomodoroView from './components/pomodoro/PomodoroView';
-import CountdownView from './components/countdown/CountdownView';
 import ChallengeView from './components/challenge/ChallengeView';
 import AnalyticsView from './components/analytics/AnalyticsView';
 import SettingsView from './components/settings/SettingsView';
@@ -23,8 +22,6 @@ const App: React.FC = () => {
         return <NoteView />;
       case Tab.POMODORO:
         return <PomodoroView />;
-      case Tab.COUNTDOWN:
-        return <CountdownView />;
       case Tab.CHALLENGE:
         return <ChallengeView />;
       case Tab.ANALYTICS:
