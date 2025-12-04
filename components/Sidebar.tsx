@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Calendar, FileText, Grid, Timer, Clock, Settings, User } from 'lucide-react';
+import { CheckSquare, Calendar, FileText, Timer, Clock, Settings, User } from 'lucide-react';
 import { Tab } from '../types';
 
 interface SidebarProps {
@@ -9,12 +9,11 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const navItems = [
-    { id: Tab.TASKS, icon: CheckSquare, label: 'Tasks' },
-    { id: Tab.CALENDAR, icon: Calendar, label: 'Calendar' },
-    { id: Tab.NOTES, icon: FileText, label: 'Notes' },
-    { id: Tab.QUADRANTS, icon: Grid, label: 'Quadrants' },
-    { id: Tab.POMODORO, icon: Timer, label: 'Pomodoro' },
-    { id: Tab.COUNTDOWN, icon: Clock, label: 'Countdown' },
+    { id: Tab.TASKS, icon: CheckSquare, label: '任务' },
+    { id: Tab.CALENDAR, icon: Calendar, label: '日历' },
+    { id: Tab.NOTES, icon: FileText, label: '笔记' },
+    { id: Tab.POMODORO, icon: Timer, label: '番茄' },
+    { id: Tab.COUNTDOWN, icon: Clock, label: '倒数日' },
   ];
 
   return (

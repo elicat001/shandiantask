@@ -44,7 +44,6 @@ const CountdownView: React.FC = () => {
 
   const getDaysLeft = (date: Date) => {
     const now = new Date();
-    // Reset hours to compare just dates roughly
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     
@@ -57,7 +56,7 @@ const CountdownView: React.FC = () => {
     <div className="h-full w-full bg-white flex flex-col">
        {/* Header with Form */}
        <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0 gap-4 bg-white z-10">
-          <h1 className="text-xl font-semibold text-gray-800 hidden sm:block flex-shrink-0">Countdown</h1>
+          <h1 className="text-xl font-semibold text-gray-800 hidden sm:block flex-shrink-0">倒数日</h1>
           
           <form onSubmit={handleAdd} className="flex-1 max-w-2xl flex items-center gap-2">
               <div className="relative flex-1">
@@ -65,7 +64,7 @@ const CountdownView: React.FC = () => {
                       type="text" 
                       value={titleInput}
                       onChange={(e) => setTitleInput(e.target.value)}
-                      placeholder="Event title (e.g. Birthday, Deadline)" 
+                      placeholder="事件标题 (例如：生日、纪念日)" 
                       className="w-full bg-gray-50 border border-transparent focus:bg-white focus:border-sage-400 rounded-lg py-2 pl-4 pr-4 text-sm focus:outline-none transition-all placeholder-gray-400" 
                   />
               </div>
@@ -97,9 +96,9 @@ const CountdownView: React.FC = () => {
                       <div className="w-16 h-16 bg-sage-300 rounded-2xl transform -rotate-12"></div>
                       <div className="w-16 h-16 bg-sage-400 rounded-2xl animate-pulse delay-75"></div>
                   </div>
-                  <p className="text-gray-500 font-medium mb-2 text-lg">No countdowns yet</p>
+                  <p className="text-gray-500 font-medium mb-2 text-lg">暂无倒数日</p>
                   <p className="text-sm text-gray-400 text-center max-w-xs leading-relaxed">
-                      Add an important date above to start tracking time.
+                      在上方添加重要的日期，开始记录时间。
                   </p>
               </div>
           ) : (
@@ -122,12 +121,12 @@ const CountdownView: React.FC = () => {
                                           {Math.abs(daysLeft)}
                                        </span>
                                        <span className="text-[9px] text-gray-400 uppercase tracking-wider font-bold mt-0.5">
-                                          {isPast ? 'Days Ago' : daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Day Left' : 'Days Left'}
+                                          {isPast ? '天前' : daysLeft === 0 ? '今天' : '天后'}
                                        </span>
                                   </div>
                                   
                                   <div className="flex flex-col items-end gap-1">
-                                      <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Target Date</span>
+                                      <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">目标日期</span>
                                       <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
                                           <Calendar size={14} className="text-sage-500" />
                                           {item.targetDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -137,7 +136,7 @@ const CountdownView: React.FC = () => {
                                   <button 
                                       onClick={() => setCountdowns(countdowns.filter(c => c.id !== item.id))}
                                       className="absolute bottom-4 left-4 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                      title="Delete Countdown"
+                                      title="删除"
                                   >
                                       <Trash2 size={16} />
                                   </button>

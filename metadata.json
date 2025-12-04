@@ -1,5 +1,5 @@
 {
   "name": "TickTick Clone",
-  "description": "A comprehensive productivity application featuring task management, calendar, notes, pomodoro timer, and AI-powered task parsing.",
+  "description": "一款功能全面的生产力应用，包含任务管理、日历、笔记、番茄钟和 AI 任务解析功能。",
   "requestFramePermissions": []
 }

@@ -19,8 +19,6 @@ const App: React.FC = () => {
         return <CalendarView />;
       case Tab.NOTES:
         return <NoteView />;
-      case Tab.QUADRANTS:
-        return <div className="flex items-center justify-center h-full text-gray-400">Eisenhower Matrix (Coming Soon)</div>;
       case Tab.POMODORO:
         return <PomodoroView />;
       case Tab.COUNTDOWN:
