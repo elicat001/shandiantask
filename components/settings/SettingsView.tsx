@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Avatar from '../common/Avatar';
 import { 
   User, CreditCard, Bell, Shield, Download, Trash2, Home, BookOpen, Crown, 
   Settings, Palette, Info, ChevronRight, Smartphone, Mail, Lock, LogOut,
@@ -25,8 +26,8 @@ const SettingsView: React.FC = () => {
         
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 flex items-center gap-6">
             <div className="relative group cursor-pointer">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-sage-50">
-                    <img src="https://picsum.photos/200/200" alt="Avatar" className="w-full h-full object-cover" />
+                <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-sage-50 flex items-center justify-center bg-sage-100">
+                    <Avatar size="lg" />
                 </div>
                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs">
                     更换
@@ -156,7 +157,7 @@ const SettingsView: React.FC = () => {
                 <div className="flex justify-between items-start mb-6">
                      <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-full border-4 border-white shadow-md overflow-hidden">
-                            <img src="https://picsum.photos/200/200" alt="User" />
+                            <Avatar size="lg" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">

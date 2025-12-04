@@ -1,5 +1,6 @@
 import React from 'react';
-import { CheckSquare, Calendar, FileText, Timer, Clock, Settings, User } from 'lucide-react';
+import { CheckSquare, Calendar, FileText, Timer, Clock, Settings } from 'lucide-react';
+import Avatar from './common/Avatar';
 import { Tab } from '../types';
 
 interface SidebarProps {
@@ -43,8 +44,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
         >
           <Settings size={22} strokeWidth={1.5} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-sage-300 overflow-hidden cursor-pointer border-2 border-transparent hover:border-white transition-all">
-           <img src="https://picsum.photos/100/100" alt="User" className="w-full h-full object-cover" />
+        <div className="cursor-pointer">
+           <Avatar size="sm" />
         </div>
       </div>
     </div>
