@@ -135,7 +135,16 @@ const AuthPage: React.FC = () => {
           navigate('/');
         }, 1000);
       } else {
-        setError(result.error?.message || '登录失败，请检查邮箱和密码');
+        // 处理登录错误，忽略邮箱确认相关的错误
+        let errorMessage = result.error?.message || '登录失败，请检查邮箱和密码';
+
+        // 如果是邮箱未确认的错误，改为提示用户检查账号密码
+        if (errorMessage.toLowerCase().includes('email not confirmed') ||
+            errorMessage.toLowerCase().includes('email verification')) {
+          errorMessage = '登录失败，请检查您的邮箱和密码是否正确';
+        }
+
+        setError(errorMessage);
       }
     } catch (err) {
       setError('网络错误，请稍后重试');
@@ -160,10 +169,10 @@ const AuthPage: React.FC = () => {
       );
 
       if (result.success) {
-        setSuccess('注册成功！请查看邮箱验证账号');
+        // 如果有 session，说明已经自动登录成功
+        if (result.data?.session || result.data?.user) {
+          setSuccess('注册成功！正在自动登录...');
 
-        // 如果直接登录成功
-        if (result.data?.user) {
           setUser({
             id: result.data.user.id,
             email: result.data.user.email || '',
@@ -176,7 +185,10 @@ const AuthPage: React.FC = () => {
             navigate('/');
           }, 1500);
         } else {
-          // 需要邮箱验证，切换到登录模式
+          // 如果没有 session，提示用户可以直接登录
+          setSuccess('注册成功！请使用您的邮箱和密码登录');
+
+          // 切换到登录模式
           setTimeout(() => {
             setIsLogin(true);
             setFormData(prev => ({

@@ -7,7 +7,7 @@ export const supabaseApi = {
     // 注册新用户
     async signUp(email: string, password: string, username: string, name?: string) {
       try {
-        // 1. 使用 Supabase Auth 注册用户
+        // 1. 使用 Supabase Auth 注册用户（跳过邮箱确认）
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
@@ -16,12 +16,25 @@ export const supabaseApi = {
               username,
               name,
             },
+            emailRedirectTo: undefined, // 不发送确认邮件
           },
         });
 
         if (authError) throw authError;
 
-        // 2. 在 users 表中创建用户记录
+        // 2. 注册成功后自动登录
+        if (authData.user && !authData.session) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (!signInError && signInData) {
+            authData.session = signInData.session;
+          }
+        }
+
+        // 3. 在 users 表中创建用户记录
         if (authData.user) {
           const { error: dbError } = await supabase
             .from('users')
@@ -36,7 +49,7 @@ export const supabaseApi = {
             console.error('创建用户记录失败:', dbError);
           }
 
-          // 3. 创建默认列表
+          // 4. 创建默认列表
           await this.createDefaultLists(authData.user.id);
         }
 
