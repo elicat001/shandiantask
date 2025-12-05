@@ -1,14 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '../common/Avatar';
-import { 
-  User, CreditCard, Bell, Shield, Download, Trash2, Home, BookOpen, Crown, 
+import {
+  User, CreditCard, Bell, Shield, Download, Trash2, Home, BookOpen, Crown,
   Settings, Palette, Info, ChevronRight, Smartphone, Mail, Lock, LogOut,
   Moon, Sun, Check, Monitor, Globe, Clock, Volume2, CheckSquare
 } from 'lucide-react';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { supabase } from '../../src/lib/supabase';
 
 const SettingsView: React.FC = () => {
   const [activeSection, setActiveSection] = useState('个人资料');
   const [themeColor, setThemeColor] = useState('sage');
+  const { user, signOut } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // 获取用户详细信息
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   const menuItems = [
     { id: '个人资料', icon: User },
@@ -36,7 +69,9 @@ const SettingsView: React.FC = () => {
             <div className="flex-1">
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">昵称</label>
                 <div className="flex items-center gap-2">
-                    <span className="text-lg font-medium text-gray-800">1372668345</span>
+                    <span className="text-lg font-medium text-gray-800">
+                        {userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || '用户'}
+                    </span>
                     <button className="text-xs text-sage-600 hover:text-sage-700 font-medium ml-2 flex items-center gap-1">
                         编辑 <Settings size={12} />
                     </button>
@@ -60,7 +95,7 @@ const SettingsView: React.FC = () => {
                     <Mail className="text-gray-400" size={20} />
                     <div>
                         <div className="text-sm font-medium text-gray-700">邮箱</div>
-                        <div className="text-xs text-gray-400">1372668345@qq.com</div>
+                        <div className="text-xs text-gray-400">{user?.email || '未设置'}</div>
                     </div>
                 </div>
                 <span className="text-xs text-gray-400">已验证</span>
@@ -69,16 +104,19 @@ const SettingsView: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <Lock className="text-gray-400" size={20} />
                     <div>
-                        <div className="text-sm font-medium text-gray-700">微信登录</div>
-                        <div className="text-xs text-gray-400">chainfind</div>
+                        <div className="text-sm font-medium text-gray-700">用户名</div>
+                        <div className="text-xs text-gray-400">{userProfile?.username || '未设置'}</div>
                     </div>
                 </div>
-                <span className="text-xs text-sage-600">已绑定</span>
+                <span className="text-xs text-sage-600">{userProfile?.username ? '已设置' : '未设置'}</span>
             </div>
         </div>
         
         <div className="mt-8 flex justify-between items-center">
-            <button className="text-sage-600 hover:text-sage-700 text-sm flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-sage-50 transition-colors">
+            <button
+                onClick={handleSignOut}
+                className="text-sage-600 hover:text-sage-700 text-sm flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-sage-50 transition-colors"
+            >
                  <LogOut size={16} /> 退出登录
             </button>
             <button className="text-gray-400 hover:text-red-500 text-sm px-4 py-2 transition-colors">
@@ -161,7 +199,7 @@ const SettingsView: React.FC = () => {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                1372668345，你好
+                                {userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || '用户'}，你好
                             </h2>
                             <p className="text-sm text-sage-600 font-medium mt-1">你的会员截止: 2031-01-26</p>
                         </div>
