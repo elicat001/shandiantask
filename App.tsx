@@ -10,15 +10,42 @@ import SettingsView from './components/settings/SettingsView';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { Tab } from './types';
 import { useStore } from './store/useStore';
+import { autoFixAgent } from './services/autoFixAgent';
+import { loggerService } from './services/loggerService';
+import { useLogger } from './hooks/useLogger';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.TASKS);
   const initializeApp = useStore((state) => state.initializeApp);
   const theme = useStore((state) => state.theme);
 
+  // 使用日志Hook
+  const logger = useLogger({
+    component: 'App',
+    trackPerformance: true,
+    trackUserActions: true
+  });
+
   // 应用初始化
   useEffect(() => {
     initializeApp();
+
+    // 初始化日志系统
+    loggerService.info('Application started', {
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString()
+    }, 'App');
+
+    // 启动自动修复智能体（每小时检查一次）
+    autoFixAgent.startAutoFix(1);
+
+    logger.info('Logger and AutoFix agent initialized');
+
+    // 清理函数
+    return () => {
+      autoFixAgent.stopAutoFix();
+      logger.info('Application shutting down');
+    };
   }, [initializeApp]);
 
   // 应用主题
@@ -27,6 +54,9 @@ const App: React.FC = () => {
   }, [theme]);
 
   const renderContent = () => {
+    // 记录tab切换
+    logger.logUserAction('Tab switched', { tab: activeTab });
+
     switch (activeTab) {
       case Tab.TASKS:
         return <TaskView />;
