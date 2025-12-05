@@ -20,7 +20,7 @@ interface HealthCheck {
 
 class AutoFixAgent {
   private isRunning = false;
-  private checkInterval: NodeJS.Timeout | null = null;
+  private checkInterval: number | null = null;
   private fixHistory: Map<string, Date> = new Map();
   private healthStatus: Map<string, HealthCheck> = new Map();
 
@@ -145,9 +145,10 @@ class AutoFixAgent {
       const componentName = fix.component;
 
       // 示例：为组件添加类型保护
-      if (window[componentName as any]) {
-        const original = window[componentName as any];
-        window[componentName as any] = function(...args: any[]) {
+      const win = window as any;
+      if (win[componentName]) {
+        const original = win[componentName];
+        win[componentName] = function(...args: any[]) {
           // 添加参数验证
           const validatedArgs = args.map(arg => {
             if (arg === undefined || arg === null) {
@@ -372,7 +373,7 @@ class AutoFixAgent {
           return originalRAF(callback);
         }
         skipFrame = true;
-        return setTimeout(() => callback(Date.now()), 33); // 30fps instead of 60fps
+        return setTimeout(() => callback(Date.now()), 33) as unknown as number; // 30fps instead of 60fps
       };
     }
 
@@ -567,7 +568,7 @@ class AutoFixAgent {
     // 设置定时任务
     this.checkInterval = setInterval(() => {
       this.analyzeAndFix();
-    }, intervalMs);
+    }, intervalMs) as unknown as number;
 
     loggerService.info(`AutoFix scheduled every ${intervalHours} hour(s)`, {}, 'AutoFixAgent');
   }

@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
-import TaskView from './components/tasks/TaskView';
-import CalendarView from './components/calendar/CalendarView';
-import NoteView from './components/notes/NoteView';
-import PomodoroView from './components/pomodoro/PomodoroView';
-import ChallengeView from './components/challenge/ChallengeView';
-import AnalyticsView from './components/analytics/AnalyticsView';
-import SettingsView from './components/settings/SettingsView';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import LoadingSpinner from './components/common/LoadingSpinner';
 import { Tab } from './types';
 import { useStore } from './store/useStore';
 import { autoFixAgent } from './services/autoFixAgent';
 import { loggerService } from './services/loggerService';
 import { useLogger } from './hooks/useLogger';
+import { performanceMonitor } from './utils/performanceMonitor';
+
+// 使用懒加载实现代码分割
+const TaskView = lazy(() => import('./components/tasks/TaskView'));
+const CalendarView = lazy(() => import('./components/calendar/CalendarView'));
+const NoteView = lazy(() => import('./components/notes/NoteView'));
+const PomodoroView = lazy(() => import('./components/pomodoro/PomodoroView'));
+const ChallengeView = lazy(() => import('./components/challenge/ChallengeView'));
+const AnalyticsView = lazy(() => import('./components/analytics/AnalyticsView'));
+const SettingsView = lazy(() => import('./components/settings/SettingsView'));
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.TASKS);
@@ -41,9 +45,16 @@ const App: React.FC = () => {
 
     logger.info('Logger and AutoFix agent initialized');
 
+    // 每5分钟检查一次性能
+    const perfCheckInterval = setInterval(() => {
+      performanceMonitor.checkPerformance();
+    }, 5 * 60 * 1000);
+
     // 清理函数
     return () => {
       autoFixAgent.stopAutoFix();
+      performanceMonitor.cleanup();
+      clearInterval(perfCheckInterval);
       logger.info('Application shutting down');
     };
   }, [initializeApp]);
@@ -52,6 +63,14 @@ const App: React.FC = () => {
   useEffect(() => {
     document.documentElement.className = `theme-${theme}`;
   }, [theme]);
+
+  // 监控标签切换性能
+  useEffect(() => {
+    const endMeasure = performanceMonitor.startMeasure(`${activeTab}View`);
+    return () => {
+      endMeasure();
+    };
+  }, [activeTab]);
 
   const renderContent = () => {
     // 记录tab切换
@@ -83,7 +102,9 @@ const App: React.FC = () => {
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <main className="flex-1 h-full overflow-hidden relative md:shadow-2xl md:rounded-l-3xl bg-white md:ml-[-20px] z-10 border-t md:border-t-0 md:border-l border-gray-100/50">
           <ErrorBoundary>
-            {renderContent()}
+            <Suspense fallback={<LoadingSpinner />}>
+              {renderContent()}
+            </Suspense>
           </ErrorBoundary>
         </main>
       </div>
