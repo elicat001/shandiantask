@@ -21,7 +21,10 @@
       "Bash(npx prisma:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []
