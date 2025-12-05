@@ -29,7 +29,7 @@ export const parseTaskWithAI = async (input: string) => {
           properties: {
             title: { type: SchemaType.STRING },
             dueDate: { type: SchemaType.STRING, description: "ISO date string or null" },
-            priority: { type: SchemaType.STRING, enum: ["none", "low", "medium", "high"] },
+            priority: { type: SchemaType.STRING, enum: ["none", "low", "medium", "high"], format: "enum" },
             tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } }
           }
         }

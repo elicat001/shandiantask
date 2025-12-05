@@ -48,7 +48,7 @@ const AnalyticsView: React.FC = () => {
       if (t.completed) data[t.listId].completed++;
     });
     return data;
-  }, [tasks]);
+  }, [tasks]) as Record<string, { total: number; completed: number }>;
 
   const tagData = useMemo(() => {
     const data: Record<string, number> = {};

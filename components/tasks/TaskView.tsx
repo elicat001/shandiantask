@@ -200,13 +200,13 @@ const TaskView: React.FC = () => {
   };
 
   const handleBulkDelete = () => {
-    Array.from(selectedTaskIds).forEach(id => deleteTask(id));
+    Array.from(selectedTaskIds).forEach((id: string) => deleteTask(id));
     setSelectedTaskIds(new Set());
     setIsSelectionMode(false);
   };
 
   const handleBulkComplete = () => {
-    Array.from(selectedTaskIds).forEach(id => {
+    Array.from(selectedTaskIds).forEach((id: string) => {
       const task = tasks.find(t => t.id === id);
       if (task && !task.completed) toggleTask(id);
     });
@@ -215,7 +215,7 @@ const TaskView: React.FC = () => {
   };
 
   const handleBulkTag = (tag: string) => {
-    Array.from(selectedTaskIds).forEach(id => {
+    Array.from(selectedTaskIds).forEach((id: string) => {
       const task = tasks.find(t => t.id === id);
       if (task) {
         const currentTags = task.tags || [];
