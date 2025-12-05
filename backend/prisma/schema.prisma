@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id             String      @id @default(cuid())
+  email          String      @unique
+  username       String      @unique
+  password       String
+  name           String?
+  avatar         String?
+  emailVerified  Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  lastLogin      DateTime?
+
+  // 关系
+  tasks          Task[]
+  lists          List[]
+  notes          Note[]
+  events         CalendarEvent[]
+  pomodoroSessions PomodoroSession[]
+  challenges     Challenge[]
+
+  @@index([email])
+  @@index([username])
+}
+
+// 任务列表模型
+model List {
+  id          String   @id @default(cuid())
+  name        String
+  color       String?
+  icon        String?
+  isDefault   Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([userId])
+  @@unique([userId, name])
+}
+
+// 任务模型
+model Task {
+  id            String      @id @default(cuid())
+  title         String
+  description   String?
+  completed     Boolean     @default(false)
+  completedAt   DateTime?
+  dueDate       DateTime?
+  priority      String      @default("none") // none, low, medium, high
+  order         Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // 关系
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listId        String
+  list          List        @relation(fields: [listId], references: [id], onDelete: Cascade)
+  tags          Tag[]
+  subtasks      SubTask[]
+
+  @@index([userId])
+  @@index([listId])
+  @@index([completed])
+  @@index([dueDate])
+}
+
+// 子任务模型
+model SubTask {
+  id          String   @id @default(cuid())
+  title       String
+  completed   Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+// 标签模型
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?
+  createdAt DateTime @default(now())
+
+  // 关系
+  tasks     Task[]
+
+  @@index([name])
+}
+
+// 笔记模型
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String?
+  pinned    Boolean  @default(false)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([pinned])
+  @@index([archived])
+}
+
+// 日历事件模型
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  allDay      Boolean  @default(false)
+  color       String?
+  location    String?
+  reminder    Int?     // 提醒时间（分钟）
+  recurring   String?  // none, daily, weekly, monthly, yearly
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startTime])
+  @@index([endTime])
+}
+
+// 番茄钟会话模型
+model PomodoroSession {
+  id          String   @id @default(cuid())
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int      // 分钟
+  type        String   // focus, short_break, long_break
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // 关系
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId      String?
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 挑战模型
+model Challenge {
+  id          String   @id @default(cuid())
+  type        String   // 21_days, 100_days, etc
+  startDate   DateTime
+  endDate     DateTime
+  currentDay  Int      @default(1)
+  isActive    Boolean  @default(true)
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  days        ChallengeDay[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// 挑战天数记录
+model ChallengeDay {
+  id              String   @id @default(cuid())
+  day             Int
+  date            DateTime
+  tasksCompleted  Int      @default(0)
+  pomodoroMinutes Int      @default(0)
+  exerciseDone    Boolean  @default(false)
+  readingDone     Boolean  @default(false)
+  mood            String?  // happy, neutral, sad
+  notes           String?
+  completed       Boolean  @default(false)
+
+  // 关系
+  challengeId     String
+  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([challengeId])
+  @@unique([challengeId, day])
+}

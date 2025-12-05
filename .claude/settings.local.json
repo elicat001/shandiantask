@@ -11,7 +11,14 @@
       "Bash(npm install:*)",
       "Bash(cat:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Bash(npm init -y)",
+      "Bash(npx prisma init:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(curl:*)",
+      "Bash(npx prisma:*)"
     ],
     "deny": [],
     "ask": []
