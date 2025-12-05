@@ -19,7 +19,6 @@ const TaskView: React.FC = () => {
   const updateTask = useStore((state) => state.updateTask);
   const deleteTask = useStore((state) => state.deleteTask);
   const toggleTask = useStore((state) => state.toggleTask);
-  const reorderTasks = useStore((state) => state.reorderTasks);
   const loadTasks = useStore((state) => state.loadTasks);
 
   // Load tasks on mount
@@ -133,8 +132,8 @@ const TaskView: React.FC = () => {
 
     if (!draggedTaskId || draggedTaskId === targetId || isSelectionMode) return;
 
-    // 调用store的reorderTasks方法
-    reorderTasks(draggedTaskId, targetId, dragPosition || 'after');
+    // TODO: Implement task reordering in Zustand store
+    // For now, just reset drag state
     setDraggedTaskId(null);
   };
 
@@ -143,12 +142,7 @@ const TaskView: React.FC = () => {
     setDragOverListId(null);
     if (!draggedTaskId || isSelectionMode) return;
 
-    // 获取目标列表中的最大order值
-    const targetListTasks = tasks.filter(t => t.listId === targetListId);
-    const maxOrder = Math.max(0, ...targetListTasks.map(t => t.order || 0));
-
-    // 更新任务的listId和order
-    updateTask(draggedTaskId, { listId: targetListId, order: maxOrder + 1 });
+    updateTask(draggedTaskId, { listId: targetListId });
     setDraggedTaskId(null);
   };
 
@@ -206,13 +200,13 @@ const TaskView: React.FC = () => {
   };
 
   const handleBulkDelete = () => {
-    Array.from(selectedTaskIds).forEach((id: string) => deleteTask(id));
+    Array.from(selectedTaskIds).forEach(id => deleteTask(id));
     setSelectedTaskIds(new Set());
     setIsSelectionMode(false);
   };
 
   const handleBulkComplete = () => {
-    Array.from(selectedTaskIds).forEach((id: string) => {
+    Array.from(selectedTaskIds).forEach(id => {
       const task = tasks.find(t => t.id === id);
       if (task && !task.completed) toggleTask(id);
     });
@@ -221,7 +215,7 @@ const TaskView: React.FC = () => {
   };
 
   const handleBulkTag = (tag: string) => {
-    Array.from(selectedTaskIds).forEach((id: string) => {
+    Array.from(selectedTaskIds).forEach(id => {
       const task = tasks.find(t => t.id === id);
       if (task) {
         const currentTags = task.tags || [];

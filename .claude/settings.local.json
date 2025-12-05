@@ -24,7 +24,8 @@
       "Bash(npm run dev:*)",
       "Bash(git fetch:*)",
       "Bash(git config:*)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

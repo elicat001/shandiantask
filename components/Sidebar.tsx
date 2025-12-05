@@ -1,7 +1,8 @@
 import React from 'react';
-import { CheckSquare, Calendar, FileText, Timer, Settings, BarChart2, Flame } from 'lucide-react';
+import { CheckSquare, Calendar, FileText, Timer, Settings, BarChart2, Flame, LogOut } from 'lucide-react';
 import Avatar from './common/Avatar';
 import { Tab } from '../types';
+import { useAuth } from '../src/contexts/AuthContext';
 
 interface SidebarProps {
   activeTab: Tab;
@@ -9,6 +10,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+  const { signOut } = useAuth();
   const navItems = [
     { id: Tab.TASKS, icon: CheckSquare, label: '任务' },
     { id: Tab.CALENDAR, icon: Calendar, label: '日历' },
@@ -51,8 +53,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
           <button
             onClick={() => setActiveTab(Tab.SETTINGS)}
             className={activeTab === Tab.SETTINGS ? 'text-white transition-colors' : 'text-sage-200 hover:text-white transition-colors'}
+            title="设置"
           >
             <Settings size={22} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={signOut}
+            className="text-sage-200 hover:text-white transition-colors"
+            title="退出登录"
+          >
+            <LogOut size={22} strokeWidth={1.5} />
           </button>
           <div className="cursor-pointer">
             <Avatar size="sm" />
