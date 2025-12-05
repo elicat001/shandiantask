@@ -388,15 +388,28 @@ const AuthPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold text-base hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                style={{ minHeight: '48px' }}
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>处理中...</span>
+                    <span className="text-white font-semibold">处理中...</span>
                   </>
                 ) : (
-                  <span>{isLogin ? '登录' : '注册'}</span>
+                  <>
+                    {isLogin ? (
+                      <>
+                        <LogIn className="w-5 h-5" />
+                        <span className="text-white font-semibold">立即登录</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-5 h-5" />
+                        <span className="text-white font-semibold">创建账号</span>
+                      </>
+                    )}
+                  </>
                 )}
               </button>
             </form>
