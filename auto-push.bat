@@ -1,37 +1,43 @@
 @echo off
-echo ========================================
-echo   GitHub 自动推送脚本
-echo ========================================
+echo =========================================
+echo     自动推送到 GitHub
+echo =========================================
 echo.
 
-:: 显示当前状态
-echo 1. 检查当前 Git 状态...
-git status
+REM 检查是否提供了提交消息
+if "%~1"=="" (
+    set COMMIT_MSG=自动更新: %date% %time%
+) else (
+    set COMMIT_MSG=%*
+)
 
+REM 显示当前状态
+echo 📊 当前 Git 状态:
+git status --short
 echo.
-echo 2. 添加所有变更到暂存区...
+
+REM 添加所有更改
+echo 📝 添加所有更改...
 git add -A
-
 echo.
-echo 3. 输入提交信息（按回车使用默认信息）：
-set /p commit_msg="提交信息: "
-if "%commit_msg%"=="" set commit_msg=chore: 自动提交代码变更
 
+REM 提交更改
+echo 💾 提交更改...
+git commit -m "%COMMIT_MSG%"
 echo.
-echo 4. 提交代码...
-git commit -m "%commit_msg%"
 
-echo.
-echo 5. 推送到 GitHub...
+REM 推送到远程
+echo 🚀 推送到 GitHub...
 git push origin main
 
-echo.
-echo ========================================
 if %errorlevel% == 0 (
-    echo   ✓ 推送成功！
+    echo.
+    echo ✅ 成功推送到 GitHub!
+    echo 提交消息: %COMMIT_MSG%
 ) else (
-    echo   ✗ 推送失败，请检查网络连接或仓库配置
+    echo.
+    echo ❌ 推送失败，请检查网络连接或仓库权限
 )
-echo ========================================
-echo.
+
+echo =========================================
 pause
