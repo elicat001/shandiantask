@@ -338,23 +338,38 @@ CREATE TRIGGER on_auth_user_created
 
 -- ==================== 10. 实用函数 ====================
 
--- 获取用户当天统计
+-- 获取用户当天统计（简化版，仅统计已创建的表）
 CREATE OR REPLACE FUNCTION get_user_daily_stats(p_user_id UUID, p_date DATE)
 RETURNS JSON AS $$
 DECLARE
   stats JSON;
 BEGIN
+  -- 简化版本：只统计已存在的表
   SELECT json_build_object(
-    'tasks_completed', COALESCE(COUNT(DISTINCT t.id) FILTER (WHERE t.completed = true), 0),
-    'pomodoros_completed', COALESCE(COUNT(DISTINCT ps.id) FILTER (WHERE ps.completed = true), 0),
-    'focus_minutes', COALESCE(SUM(ps.duration) FILTER (WHERE ps.session_type = 'focus'), 0) / 60,
-    'notes_created', COALESCE(COUNT(DISTINCT n.id), 0)
-  ) INTO stats
-  FROM users u
-  LEFT JOIN tasks t ON t.user_id = u.id AND DATE(t.completed_at) = p_date
-  LEFT JOIN pomodoro_sessions ps ON ps.user_id = u.id AND DATE(ps.started_at) = p_date
-  LEFT JOIN notes n ON n.user_id = u.id AND DATE(n.created_at) = p_date
-  WHERE u.id = p_user_id;
+    'tasks_completed', (
+      SELECT COUNT(*) FROM tasks
+      WHERE user_id = p_user_id
+      AND completed = true
+      AND DATE(completed_at) = p_date
+    ),
+    'pomodoros_completed', (
+      SELECT COUNT(*) FROM pomodoro_sessions
+      WHERE user_id = p_user_id
+      AND completed = true
+      AND DATE(started_at) = p_date
+    ),
+    'focus_minutes', (
+      SELECT COALESCE(SUM(duration) / 60, 0) FROM pomodoro_sessions
+      WHERE user_id = p_user_id
+      AND session_type = 'focus'
+      AND DATE(started_at) = p_date
+    ),
+    'notes_created', (
+      SELECT COUNT(*) FROM notes
+      WHERE user_id = p_user_id
+      AND DATE(created_at) = p_date
+    )
+  ) INTO stats;
 
   RETURN stats;
 END;
