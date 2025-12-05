@@ -170,24 +170,39 @@ export const useStore = create<AppStore>()(
             .filter(t => t.listId === draggedTask.listId)
             .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-          // 从列表中移除被拖拽的任务
-          const filteredTasks = listTasks.filter(t => t.id !== draggedId);
+          // 找到被拖拽任务和目标任务的原始索引
+          const draggedIndex = listTasks.findIndex(t => t.id === draggedId);
+          const targetIndex = listTasks.findIndex(t => t.id === targetId);
 
-          // 找到目标任务的新位置
-          const targetIndex = filteredTasks.findIndex(t => t.id === targetId);
-          const insertIndex = position === 'after' ? targetIndex + 1 : targetIndex;
+          // 从列表中移除被拖拽的任务
+          const reorderedTasks = [...listTasks];
+          const [removed] = reorderedTasks.splice(draggedIndex, 1);
+
+          // 计算插入位置
+          // 需要考虑移除元素后索引的变化
+          let insertIndex: number;
+          if (draggedIndex < targetIndex) {
+            // 向下拖拽：移除元素后，目标索引会减1
+            insertIndex = position === 'after' ? targetIndex : targetIndex - 1;
+          } else {
+            // 向上拖拽：移除元素后，目标索引不变
+            insertIndex = position === 'after' ? targetIndex + 1 : targetIndex;
+          }
+
+          // 确保索引在有效范围内
+          insertIndex = Math.max(0, Math.min(insertIndex, reorderedTasks.length));
 
           // 插入被拖拽的任务
-          filteredTasks.splice(insertIndex, 0, draggedTask);
+          reorderedTasks.splice(insertIndex, 0, removed);
 
           // 重新分配order值
-          filteredTasks.forEach((task, index) => {
+          reorderedTasks.forEach((task, index) => {
             task.order = index;
           });
 
           // 更新所有任务
           const updatedTasks = tasks.map(t => {
-            const reorderedTask = filteredTasks.find(rt => rt.id === t.id);
+            const reorderedTask = reorderedTasks.find(rt => rt.id === t.id);
             return reorderedTask || t;
           });
 
