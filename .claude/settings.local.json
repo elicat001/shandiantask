@@ -18,7 +18,10 @@
       "Bash(npx prisma generate:*)",
       "Bash(npm uninstall:*)",
       "Bash(curl:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
