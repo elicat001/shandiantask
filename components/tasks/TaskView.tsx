@@ -7,24 +7,41 @@ import {
 } from 'lucide-react';
 import { Task, List, SubTask } from '../../types';
 import { parseTaskWithAI } from '../../services/geminiService';
-import { useStore, getFilteredTasks } from '../../store/useStore';
+import { useSupabaseStore } from '../../store/useSupabaseStore';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useEffect as useEffectReact } from 'react';
 
 const TaskView: React.FC = () => {
-  // Global State from Zustand
-  const tasks = useStore((state) => state.tasks);
-  const lists = useStore((state) => state.lists);
-  const activeListId = useStore((state) => state.activeListId);
-  const setActiveListId = useStore((state) => state.setActiveList);
-  const addTask = useStore((state) => state.addTask);
-  const updateTask = useStore((state) => state.updateTask);
-  const deleteTask = useStore((state) => state.deleteTask);
-  const toggleTask = useStore((state) => state.toggleTask);
-  const loadTasks = useStore((state) => state.loadTasks);
+  // Get auth context
+  const { user } = useAuth();
 
-  // Load tasks on mount
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  // Global State from Zustand with Supabase
+  const tasks = useSupabaseStore((state) => state.tasks);
+  const lists = useSupabaseStore((state) => state.lists);
+  const activeListId = useSupabaseStore((state) => state.activeListId);
+  const setActiveListId = useSupabaseStore((state) => state.setActiveList);
+  const addTask = useSupabaseStore((state) => state.addTask);
+  const updateTask = useSupabaseStore((state) => state.updateTask);
+  const deleteTask = useSupabaseStore((state) => state.deleteTask);
+  const toggleTask = useSupabaseStore((state) => state.toggleTask);
+  const initializeUserData = useSupabaseStore((state) => state.initializeUserData);
+  const fetchTasks = useSupabaseStore((state) => state.fetchTasks);
+  const fetchLists = useSupabaseStore((state) => state.fetchLists);
+
+  // Initialize user data when component mounts or user changes
+  useEffectReact(() => {
+    if (user?.id) {
+      initializeUserData(user.id);
+    }
+  }, [user?.id, initializeUserData]);
+
+  // Also ensure tasks are refreshed
+  useEffectReact(() => {
+    if (user?.id) {
+      fetchTasks();
+      fetchLists();
+    }
+  }, [user?.id, fetchTasks, fetchLists]);
 
   // State: Input & Parsing
   const [inputValue, setInputValue] = useState('');
@@ -55,7 +72,7 @@ const TaskView: React.FC = () => {
   const availableTags = ['工作', '个人', '健康', '财务', '开发', '学习'];
 
   const listNameMap: Record<string, string> = {
-    inbox: '收集箱',
+    inbox: '收件箱',
     today: '今天',
     next_7_days: '最近7天',
     work: '工作',
@@ -160,8 +177,7 @@ const TaskView: React.FC = () => {
     const finalTags = inputTags.length > 0 ? inputTags : (parsedData?.tags || []);
     const finalDueDate = inputDueDate ? inputDueDate : (parsedData?.dueDate ? new Date(parsedData.dueDate) : undefined);
 
-    const newTask: Task = {
-      id: Date.now().toString(),
+    const newTask: Partial<Task> = {
       title: parsedData?.title || inputValue,
       completed: false,
       listId: activeListId,
@@ -171,7 +187,8 @@ const TaskView: React.FC = () => {
       subtasks: []
     };
 
-    addTask(newTask);
+    // Add task via Supabase (async)
+    await addTask(newTask);
     setInputValue('');
     // Reset toolbar
     setInputPriority('none');
@@ -273,8 +290,27 @@ const TaskView: React.FC = () => {
     setInputTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
-  // Filter tasks using the utility function from store
-  const filteredTasks = getFilteredTasks(tasks, activeListId);
+  // Filter tasks based on the active list
+  const getFilteredTasksLocal = (tasks: Task[], activeListId: string) => {
+    if (activeListId === 'today') {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tasks.filter(t => t.dueDate && new Date(t.dueDate) >= today && new Date(t.dueDate) < tomorrow);
+    } else if (activeListId === 'next_7_days') {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const next7Days = new Date(today);
+      next7Days.setDate(next7Days.getDate() + 7);
+      return tasks.filter(t => t.dueDate && new Date(t.dueDate) >= today && new Date(t.dueDate) <= next7Days);
+    } else {
+      // Filter by actual list ID
+      return tasks.filter(t => t.listId === activeListId);
+    }
+  };
+
+  const filteredTasks = getFilteredTasksLocal(tasks, activeListId);
   const activeTasks = filteredTasks.filter(t => !t.completed);
   const completedTasks = filteredTasks.filter(t => t.completed);
 
@@ -290,8 +326,30 @@ const TaskView: React.FC = () => {
         <div className="p-4 flex-shrink-0">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">智能清单</h2>
           <ul className="space-y-1">
-            {['inbox', 'today', 'next_7_days'].map(listId => (
-              <li 
+            {/* Default list (inbox) from database */}
+            {lists.filter(list => list.isDefault).map(list => (
+              <li
+                key={list.id}
+                onDragOver={(e) => { e.preventDefault(); setDragOverListId(list.id); }}
+                onDragLeave={() => setDragOverListId(null)}
+                onDrop={(e) => handleListDrop(e, list.id)}
+                onClick={() => setActiveListId(list.id)}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                  activeListId === list.id ? 'bg-sage-100 text-sage-700' : 'text-gray-600 hover:bg-gray-100'
+                } ${dragOverListId === list.id ? 'bg-sage-200 ring-2 ring-sage-400' : ''}`}
+              >
+                <div className="flex items-center gap-2">
+                  <Inbox size={16} />
+                  {list.name}
+                </div>
+                <span className="text-xs text-gray-400 font-medium">
+                  {tasks.filter(t => t.listId === list.id && !t.completed).length}
+                </span>
+              </li>
+            ))}
+            {/* Smart lists (virtual) */}
+            {['today', 'next_7_days'].map(listId => (
+              <li
                 key={listId}
                 onDragOver={(e) => { e.preventDefault(); setDragOverListId(listId); }}
                 onDragLeave={() => setDragOverListId(null)}
@@ -302,11 +360,26 @@ const TaskView: React.FC = () => {
                 } ${dragOverListId === listId ? 'bg-sage-200 ring-2 ring-sage-400' : ''}`}
               >
                 <div className="flex items-center gap-2">
-                  {listId === 'inbox' ? <Inbox size={16} /> : listId === 'today' ? <CalendarIcon size={16} /> : <LayoutGrid size={16} />}
+                  {listId === 'today' ? <CalendarIcon size={16} /> : <LayoutGrid size={16} />}
                   {listNameMap[listId]}
                 </div>
                 <span className="text-xs text-gray-400 font-medium">
-                  {tasks.filter(t => t.listId === listId && !t.completed).length}
+                  {tasks.filter(t => {
+                    if (listId === 'today') {
+                      const today = new Date();
+                      today.setHours(0,0,0,0);
+                      const tomorrow = new Date(today);
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return t.dueDate && new Date(t.dueDate) >= today && new Date(t.dueDate) < tomorrow && !t.completed;
+                    } else if (listId === 'next_7_days') {
+                      const today = new Date();
+                      today.setHours(0,0,0,0);
+                      const next7Days = new Date(today);
+                      next7Days.setDate(next7Days.getDate() + 7);
+                      return t.dueDate && new Date(t.dueDate) >= today && new Date(t.dueDate) <= next7Days && !t.completed;
+                    }
+                    return false;
+                  }).length}
                 </span>
               </li>
             ))}
@@ -316,24 +389,19 @@ const TaskView: React.FC = () => {
         <div className="p-4 flex-1 overflow-y-auto">
            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">清单</h2>
            <ul className="space-y-1">
-              <li 
-                 onDragOver={(e) => { e.preventDefault(); setDragOverListId('work'); }}
-                 onDragLeave={() => setDragOverListId(null)}
-                 onDrop={(e) => handleListDrop(e, 'work')}
-                 onClick={() => setActiveListId('work')}
-                 className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${activeListId === 'work' ? 'bg-sage-100 text-sage-700' : 'text-gray-600 hover:bg-gray-100'} ${dragOverListId === 'work' ? 'bg-sage-200 ring-2 ring-sage-400' : ''}`}
-              >
-                 <span className="w-2 h-2 rounded-full bg-blue-400" /> 工作
-              </li>
-              <li 
-                onDragOver={(e) => { e.preventDefault(); setDragOverListId('personal'); }}
-                onDragLeave={() => setDragOverListId(null)}
-                onDrop={(e) => handleListDrop(e, 'personal')}
-                onClick={() => setActiveListId('personal')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${activeListId === 'personal' ? 'bg-sage-100 text-sage-700' : 'text-gray-600 hover:bg-gray-100'} ${dragOverListId === 'personal' ? 'bg-sage-200 ring-2 ring-sage-400' : ''}`}
-              >
-                 <span className="w-2 h-2 rounded-full bg-green-400" /> 个人
-              </li>
+              {lists.filter(list => !list.isDefault).map((list, index) => (
+                <li
+                  key={list.id}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverListId(list.id); }}
+                  onDragLeave={() => setDragOverListId(null)}
+                  onDrop={(e) => handleListDrop(e, list.id)}
+                  onClick={() => setActiveListId(list.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${activeListId === list.id ? 'bg-sage-100 text-sage-700' : 'text-gray-600 hover:bg-gray-100'} ${dragOverListId === list.id ? 'bg-sage-200 ring-2 ring-sage-400' : ''}`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${list.color || (index % 2 === 0 ? 'bg-blue-400' : 'bg-green-400')}`} />
+                  {list.name}
+                </li>
+              ))}
            </ul>
         </div>
 
@@ -363,7 +431,7 @@ const TaskView: React.FC = () => {
         {/* Header */}
         <div className="h-14 md:h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-             {listNameMap[activeListId] || activeListId} 
+             {listNameMap[activeListId] || lists.find(l => l.id === activeListId)?.name || activeListId}
              <span className="text-sm font-normal text-gray-400">({activeTasks.length})</span>
            </h1>
            <div className="flex items-center gap-2">
