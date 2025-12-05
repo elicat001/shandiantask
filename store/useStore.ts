@@ -18,6 +18,7 @@ interface AppStore {
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   toggleTask: (id: string) => void;
+  reorderTasks: (draggedId: string, targetId: string, position: 'before' | 'after') => void;
   setActiveList: (listId: string) => void;
   loadTasks: () => void;
   saveTasks: () => void;
@@ -103,9 +104,13 @@ export const useStore = create<AppStore>()(
         },
 
         addTask: (task) => {
-          const tasks = [...get().tasks, task];
-          set({ tasks });
-          storageService.saveTasks(tasks);
+          const tasks = get().tasks;
+          // 为新任务设置order值（放在最后）
+          const maxOrder = Math.max(0, ...tasks.map(t => t.order || 0));
+          const newTask = { ...task, order: maxOrder + 1 };
+          const updatedTasks = [...tasks, newTask];
+          set({ tasks: updatedTasks });
+          storageService.saveTasks(updatedTasks);
         },
 
         updateTask: (id, updates) => {
@@ -151,6 +156,43 @@ export const useStore = create<AppStore>()(
               todayCompleted
             );
           }
+        },
+
+        reorderTasks: (draggedId, targetId, position) => {
+          const tasks = get().tasks;
+          const draggedTask = tasks.find(t => t.id === draggedId);
+          const targetTask = tasks.find(t => t.id === targetId);
+
+          if (!draggedTask || !targetTask || draggedId === targetId) return;
+
+          // 获取当前listId的所有任务并按order排序
+          const listTasks = tasks
+            .filter(t => t.listId === draggedTask.listId)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+          // 从列表中移除被拖拽的任务
+          const filteredTasks = listTasks.filter(t => t.id !== draggedId);
+
+          // 找到目标任务的新位置
+          const targetIndex = filteredTasks.findIndex(t => t.id === targetId);
+          const insertIndex = position === 'after' ? targetIndex + 1 : targetIndex;
+
+          // 插入被拖拽的任务
+          filteredTasks.splice(insertIndex, 0, draggedTask);
+
+          // 重新分配order值
+          filteredTasks.forEach((task, index) => {
+            task.order = index;
+          });
+
+          // 更新所有任务
+          const updatedTasks = tasks.map(t => {
+            const reorderedTask = filteredTasks.find(rt => rt.id === t.id);
+            return reorderedTask || t;
+          });
+
+          set({ tasks: updatedTasks });
+          storageService.saveTasks(updatedTasks);
         },
 
         setActiveList: (listId) => set({ activeListId: listId }),
@@ -421,24 +463,32 @@ export const getFilteredTasks = (tasks: Task[], listId: string): Task[] => {
   const next7Days = new Date(today);
   next7Days.setDate(today.getDate() + 7);
 
+  let filteredTasks: Task[];
+
   switch (listId) {
     case 'inbox':
-      return tasks;
+      filteredTasks = tasks;
+      break;
     case 'today':
-      return tasks.filter(t => {
+      filteredTasks = tasks.filter(t => {
         if (!t.dueDate) return false;
         const dueDate = new Date(t.dueDate);
         return dueDate.toDateString() === today.toDateString();
       });
+      break;
     case 'next_7_days':
-      return tasks.filter(t => {
+      filteredTasks = tasks.filter(t => {
         if (!t.dueDate) return false;
         const dueDate = new Date(t.dueDate);
         return dueDate >= today && dueDate <= next7Days;
       });
+      break;
     default:
-      return tasks.filter(t => t.listId === listId);
+      filteredTasks = tasks.filter(t => t.listId === listId);
   }
+
+  // 按order字段排序
+  return filteredTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
 // 获取任务统计

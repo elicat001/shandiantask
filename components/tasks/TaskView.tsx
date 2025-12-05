@@ -19,6 +19,7 @@ const TaskView: React.FC = () => {
   const updateTask = useStore((state) => state.updateTask);
   const deleteTask = useStore((state) => state.deleteTask);
   const toggleTask = useStore((state) => state.toggleTask);
+  const reorderTasks = useStore((state) => state.reorderTasks);
   const loadTasks = useStore((state) => state.loadTasks);
 
   // Load tasks on mount
@@ -132,8 +133,8 @@ const TaskView: React.FC = () => {
 
     if (!draggedTaskId || draggedTaskId === targetId || isSelectionMode) return;
 
-    // TODO: Implement task reordering in Zustand store
-    // For now, just reset drag state
+    // 调用store的reorderTasks方法
+    reorderTasks(draggedTaskId, targetId, dragPosition || 'after');
     setDraggedTaskId(null);
   };
 
@@ -142,7 +143,12 @@ const TaskView: React.FC = () => {
     setDragOverListId(null);
     if (!draggedTaskId || isSelectionMode) return;
 
-    updateTask(draggedTaskId, { listId: targetListId });
+    // 获取目标列表中的最大order值
+    const targetListTasks = tasks.filter(t => t.listId === targetListId);
+    const maxOrder = Math.max(0, ...targetListTasks.map(t => t.order || 0));
+
+    // 更新任务的listId和order
+    updateTask(draggedTaskId, { listId: targetListId, order: maxOrder + 1 });
     setDraggedTaskId(null);
   };
 

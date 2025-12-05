@@ -24,6 +24,7 @@ export interface Task {
   priority: 'none' | 'low' | 'medium' | 'high';
   listId: string;
   subtasks?: SubTask[];
+  order?: number; // 用于任务排序
 }
 
 export interface List {
