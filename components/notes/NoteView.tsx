@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Search, MoreHorizontal, Undo, Redo, Bold, Italic, List, Image as ImageIcon, Sparkles, FileText } from 'lucide-react';
 import { Note } from '../../types';
 import { summarizeNoteWithAI } from '../../services/geminiService';
@@ -19,6 +19,13 @@ const NoteView: React.FC = () => {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // 本地编辑状态，避免每次按键都更新数据库
+  const [localTitle, setLocalTitle] = useState('');
+  const [localContent, setLocalContent] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | ''>('');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // 初始化用户数据和加载笔记
   useEffect(() => {
     if (user?.id) {
@@ -36,9 +43,61 @@ const NoteView: React.FC = () => {
 
   const activeNote = notes.find(n => n.id === activeNoteId);
 
-  const handleUpdateNote = async (field: keyof Note, value: string) => {
+  // 当活动笔记改变时，同步本地状态
+  useEffect(() => {
+    if (activeNote) {
+      setLocalTitle(activeNote.title || '');
+      setLocalContent(activeNote.content || '');
+    }
+  }, [activeNote]);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // 防抖保存函数
+  const debouncedSave = useCallback((field: 'title' | 'content', value: string) => {
     if (!activeNoteId) return;
-    await updateNote(activeNoteId, { [field]: value, updatedAt: new Date() });
+
+    setSaveStatus('saving');
+
+    // 清除之前的定时器
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // 设置新的定时器，延迟500ms保存
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        setIsSaving(true);
+        await updateNote(activeNoteId, { [field]: value, updatedAt: new Date() });
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus(''), 2000); // 2秒后隐藏状态
+      } catch (error) {
+        console.error('保存笔记失败:', error);
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus(''), 3000); // 3秒后隐藏错误
+      } finally {
+        setIsSaving(false);
+      }
+    }, 500);
+  }, [activeNoteId, updateNote]);
+
+  // 处理标题更新
+  const handleTitleChange = (value: string) => {
+    setLocalTitle(value);
+    debouncedSave('title', value);
+  };
+
+  // 处理内容更新
+  const handleContentChange = (value: string) => {
+    setLocalContent(value);
+    debouncedSave('content', value);
   };
 
   const handleAISummary = async () => {
@@ -127,10 +186,10 @@ const NoteView: React.FC = () => {
       {activeNote ? (
         <div className="flex-1 flex flex-col h-full">
             <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4 md:px-6 bg-white flex-shrink-0">
-                <input 
-                    type="text" 
-                    value={activeNote.title}
-                    onChange={(e) => handleUpdateNote('title', e.target.value)}
+                <input
+                    type="text"
+                    value={localTitle}
+                    onChange={(e) => handleTitleChange(e.target.value)}
                     className="text-xl font-bold text-gray-800 bg-transparent focus:outline-none placeholder-gray-300 w-full"
                     placeholder="Enter title..."
                 />
@@ -165,14 +224,32 @@ const NoteView: React.FC = () => {
                     </div>
                 )}
                 <textarea
-                    value={activeNote.content}
-                    onChange={(e) => handleUpdateNote('content', e.target.value)}
+                    value={localContent}
+                    onChange={(e) => handleContentChange(e.target.value)}
                     className="w-full h-full resize-none focus:outline-none text-gray-700 leading-relaxed text-lg"
                     placeholder="Start typing..."
                 />
             </div>
-            <div className="h-8 border-t border-gray-100 flex items-center justify-end px-4 text-xs text-gray-400 bg-gray-50">
-                Word count: {activeNote.content.length}
+            <div className="h-8 border-t border-gray-100 flex items-center justify-between px-4 text-xs text-gray-400 bg-gray-50">
+                <div className="flex items-center gap-2">
+                    {saveStatus === 'saving' && (
+                        <span className="text-blue-500 flex items-center gap-1">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            保存中...
+                        </span>
+                    )}
+                    {saveStatus === 'saved' && (
+                        <span className="text-green-500 flex items-center gap-1">
+                            ✓ 已保存
+                        </span>
+                    )}
+                    {saveStatus === 'error' && (
+                        <span className="text-red-500 flex items-center gap-1">
+                            ⚠ 保存失败
+                        </span>
+                    )}
+                </div>
+                <span>字数: {localContent.length}</span>
             </div>
         </div>
       ) : (
