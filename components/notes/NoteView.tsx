@@ -1,29 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreHorizontal, Undo, Redo, Bold, Italic, List, Image as ImageIcon, Sparkles, FileText } from 'lucide-react';
 import { Note } from '../../types';
 import { summarizeNoteWithAI } from '../../services/geminiService';
+import { useSupabaseStore } from '../../store/useSupabaseStore';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 const NoteView: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([
-    { id: '1', title: 'Project Ideas', content: '1. Build a clone of TickTick.\n2. Use React and Tailwind.\n3. Integrate AI for smart tasks.', updatedAt: new Date() },
-    { id: '2', title: 'Meeting Notes', content: 'Discussed the quarterly goals. Revenue is up by 20%. Need to focus on user retention next month.', updatedAt: new Date(Date.now() - 86400000) },
-  ]);
-  const [activeNoteId, setActiveNoteId] = useState<string>(notes[0].id);
+  const { user } = useAuth();
+  const notes = useSupabaseStore((state) => state.notes);
+  const activeNoteId = useSupabaseStore((state) => state.activeNoteId);
+  const setActiveNote = useSupabaseStore((state) => state.setActiveNote);
+  const fetchNotes = useSupabaseStore((state) => state.fetchNotes);
+  const addNote = useSupabaseStore((state) => state.addNote);
+  const updateNote = useSupabaseStore((state) => state.updateNote);
+  const deleteNote = useSupabaseStore((state) => state.deleteNote);
+  const initializeUserData = useSupabaseStore((state) => state.initializeUserData);
+
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // 初始化用户数据和加载笔记
+  useEffect(() => {
+    if (user?.id) {
+      initializeUserData(user.id);
+      fetchNotes();
+    }
+  }, [user?.id, initializeUserData, fetchNotes]);
+
+  // 设置初始活动笔记
+  useEffect(() => {
+    if (notes.length > 0 && !activeNoteId) {
+      setActiveNote(notes[0].id);
+    }
+  }, [notes, activeNoteId, setActiveNote]);
+
   const activeNote = notes.find(n => n.id === activeNoteId);
 
-  const handleUpdateNote = (field: keyof Note, value: string) => {
-    setNotes(notes.map(n => n.id === activeNoteId ? { ...n, [field]: value, updatedAt: new Date() } : n));
+  const handleUpdateNote = async (field: keyof Note, value: string) => {
+    if (!activeNoteId) return;
+    await updateNote(activeNoteId, { [field]: value, updatedAt: new Date() });
   };
 
   const handleAISummary = async () => {
-    if (!activeNote) return;
+    if (!activeNote || !activeNoteId) return;
     setIsSummarizing(true);
     const summary = await summarizeNoteWithAI(activeNote.content);
-    setNotes(notes.map(n => n.id === activeNoteId ? { ...n, summary } : n));
+    await updateNote(activeNoteId, { summary });
     setIsSummarizing(false);
+  };
+
+  const handleAddNote = async () => {
+    const newNote: Partial<Note> = {
+      title: 'New Note',
+      content: '',
+      updatedAt: new Date()
+    };
+    await addNote(newNote);
+    // 新笔记将自动通过 Supabase 订阅更新到 notes 数组
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    await deleteNote(noteId);
+    // 如果删除的是当前活动笔记，选择另一个
+    if (noteId === activeNoteId && notes.length > 1) {
+      const remainingNotes = notes.filter(n => n.id !== noteId);
+      if (remainingNotes.length > 0) {
+        setActiveNote(remainingNotes[0].id);
+      }
+    }
   };
 
   const filteredNotes = notes.filter(note => 
@@ -53,12 +97,7 @@ const NoteView: React.FC = () => {
                 />
              </div>
          </div>
-         <button onClick={() => {
-             const newNote = { id: Date.now().toString(), title: 'New Note', content: '', updatedAt: new Date() };
-             setNotes([newNote, ...notes]);
-             setActiveNoteId(newNote.id);
-             setSearchQuery(''); // Clear search when adding new
-         }} className="mx-3 mb-3 flex items-center justify-center gap-2 py-2 bg-white border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-sage-400 hover:text-sage-600 transition-all text-sm">
+         <button onClick={handleAddNote} className="mx-3 mb-3 flex items-center justify-center gap-2 py-2 bg-white border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-sage-400 hover:text-sage-600 transition-all text-sm">
              <Plus size={16} /> New Note
          </button>
          
@@ -69,14 +108,16 @@ const NoteView: React.FC = () => {
                  </div>
              )}
              {filteredNotes.map(note => (
-                 <div 
-                    key={note.id} 
-                    onClick={() => setActiveNoteId(note.id)}
+                 <div
+                    key={note.id}
+                    onClick={() => setActiveNote(note.id)}
                     className={`p-3 rounded-lg cursor-pointer border transition-all ${activeNoteId === note.id ? 'bg-white border-sage-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-gray-100'}`}
                 >
                      <h3 className={`text-sm font-medium mb-1 truncate ${activeNoteId === note.id ? 'text-sage-700' : 'text-gray-700'}`}>{note.title}</h3>
                      <p className="text-xs text-gray-500 line-clamp-2">{note.content || 'No content'}</p>
-                     <span className="text-[10px] text-gray-400 mt-2 block">{note.updatedAt.toLocaleDateString()}</span>
+                     <span className="text-[10px] text-gray-400 mt-2 block">
+                        {note.updatedAt ? new Date(note.updatedAt).toLocaleDateString() : ''}
+                     </span>
                  </div>
              ))}
          </div>
