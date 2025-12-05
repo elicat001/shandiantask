@@ -121,29 +121,19 @@ export const useStore = create<StoreState>()(
       // 用户状态初始值
       user: null,
       setUser: (user) => set({ user }),
-      clearUser: () => set({ user: null }),
+      clearUser: () => set({
+        user: null,
+        tasks: [],
+        lists: [],
+        selectedListId: null,
+        notes: [],
+        selectedNoteId: null,
+      }),
 
       // 任务状态初始值
       tasks: [],
-      lists: [
-        {
-          id: 'inbox',
-          name: '收件箱',
-          isDefault: true,
-          orderIndex: 0,
-        },
-        {
-          id: 'work',
-          name: '工作',
-          orderIndex: 1,
-        },
-        {
-          id: 'personal',
-          name: '个人',
-          orderIndex: 2,
-        },
-      ],
-      selectedListId: 'inbox',
+      lists: [], // 初始为空，登录后从数据库加载
+      selectedListId: null,
 
       // 任务操作
       addTask: (task) =>

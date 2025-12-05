@@ -58,7 +58,10 @@ const HomePage: React.FC = () => {
       const listsResult = await supabaseApi.lists.getAll();
       if (listsResult.success && listsResult.data) {
         // 清除本地默认列表，使用从数据库获取的列表
-        useStore.setState({ lists: listsResult.data });
+        useStore.setState({
+          lists: listsResult.data,
+          selectedListId: listsResult.data[0]?.id || null
+        });
       }
 
       // 加载任务
@@ -80,7 +83,7 @@ const HomePage: React.FC = () => {
 
   // 获取当前列表的任务
   const currentListTasks = tasks.filter(task => {
-    if (!selectedListId) return true;
+    if (!selectedListId || selectedListId === 'all') return true;
     return task.listId === selectedListId;
   }).filter(task => {
     if (!searchQuery) return true;
@@ -88,15 +91,22 @@ const HomePage: React.FC = () => {
   });
 
   // 获取当前列表信息
-  const currentList = lists.find(list => list.id === selectedListId) || lists[0];
+  const currentList = lists.find(list => list.id === selectedListId) || { name: '所有任务', id: 'all' };
 
   // 添加新任务
   const handleAddTask = async () => {
     if (!newTaskTitle.trim() || !user) return;
 
+    // 使用当前选中的列表，如果没有选中或选中"所有"，则使用默认列表
+    let targetListId = selectedListId;
+    if (!targetListId || targetListId === 'all') {
+      const defaultList = lists.find(list => list.isDefault);
+      targetListId = defaultList?.id || lists[0]?.id;
+    }
+
     const newTask = {
       title: newTaskTitle,
-      listId: selectedListId || lists[0]?.id || 'inbox',
+      listId: targetListId,
       completed: false,
       priority: 'medium' as const,
       tags: [],
@@ -140,17 +150,17 @@ const HomePage: React.FC = () => {
   };
 
   // 获取列表图标
-  const getListIcon = (listId: string) => {
-    switch (listId) {
-      case 'inbox':
-        return <Inbox className="w-4 h-4" />;
-      case 'work':
-        return <Briefcase className="w-4 h-4" />;
-      case 'personal':
-        return <HomeIcon className="w-4 h-4" />;
-      default:
-        return <ChevronRight className="w-4 h-4" />;
+  const getListIcon = (list: any) => {
+    // 根据列表名称选择图标
+    const name = list.name?.toLowerCase();
+    if (name?.includes('收件') || name?.includes('inbox')) {
+      return <Inbox className="w-4 h-4" />;
+    } else if (name?.includes('工作') || name?.includes('work')) {
+      return <Briefcase className="w-4 h-4" />;
+    } else if (name?.includes('个人') || name?.includes('personal')) {
+      return <HomeIcon className="w-4 h-4" />;
     }
+    return <ChevronRight className="w-4 h-4" />;
   };
 
   return (
@@ -204,7 +214,7 @@ const HomePage: React.FC = () => {
                 } ${sidebarCollapsed ? 'justify-center' : ''}`}
                 title={sidebarCollapsed ? list.name : undefined}
               >
-                {getListIcon(list.id)}
+                {getListIcon(list)}
                 {!sidebarCollapsed && (
                   <>
                     <span className="flex-1 text-left">{list.name}</span>

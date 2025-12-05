@@ -165,7 +165,7 @@ export const supabaseApi = {
 
         let query = supabase
           .from('tasks')
-          .select('*, lists!inner(*)')
+          .select('*')
           .eq('user_id', user.id)
           .order('order_index', { ascending: true });
 
@@ -184,7 +184,25 @@ export const supabaseApi = {
 
         if (error) throw error;
 
-        return { success: true, data };
+        // 转换数据格式：下划线转驼峰
+        const formattedData = data?.map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          completed: task.completed,
+          completedAt: task.completed_at,
+          dueDate: task.due_date,
+          priority: task.priority,
+          orderIndex: task.order_index,
+          userId: task.user_id,
+          listId: task.list_id,
+          createdAt: task.created_at,
+          updatedAt: task.updated_at,
+          subtasks: [],
+          tags: [],
+        }));
+
+        return { success: true, data: formattedData };
       } catch (error) {
         console.error('获取任务失败:', error);
         return { success: false, error };
@@ -195,8 +213,8 @@ export const supabaseApi = {
     async create(task: {
       title: string;
       description?: string;
-      list_id?: string;
-      due_date?: Date;
+      listId?: string;
+      dueDate?: Date;
       priority?: 'none' | 'low' | 'medium' | 'high';
     }) {
       try {
@@ -204,7 +222,7 @@ export const supabaseApi = {
         if (!user) throw new Error('未登录');
 
         // 如果没有指定列表，使用默认列表
-        let listId = task.list_id;
+        let listId = task.listId;
         if (!listId) {
           const { data: defaultList } = await supabase
             .from('lists')
@@ -229,8 +247,10 @@ export const supabaseApi = {
         const { data, error } = await supabase
           .from('tasks')
           .insert({
-            ...task,
+            title: task.title,
+            description: task.description,
             list_id: listId,
+            due_date: task.dueDate,
             user_id: user.id,
             order_index: maxOrder + 1,
             priority: task.priority || 'none',
@@ -240,7 +260,25 @@ export const supabaseApi = {
 
         if (error) throw error;
 
-        return { success: true, data };
+        // 转换返回的数据格式
+        const formattedData = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          completed: data.completed,
+          completedAt: data.completed_at,
+          dueDate: data.due_date,
+          priority: data.priority,
+          orderIndex: data.order_index,
+          userId: data.user_id,
+          listId: data.list_id,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+          subtasks: [],
+          tags: [],
+        };
+
+        return { success: true, data: formattedData };
       } catch (error) {
         console.error('创建任务失败:', error);
         return { success: false, error };
@@ -342,13 +380,26 @@ export const supabaseApi = {
 
         const { data, error } = await supabase
           .from('lists')
-          .select('*, tasks:tasks(count)')
+          .select('*')
           .eq('user_id', user.id)
           .order('order_index', { ascending: true });
 
         if (error) throw error;
 
-        return { success: true, data };
+        // 转换数据格式：下划线转驼峰
+        const formattedData = data?.map(list => ({
+          id: list.id,
+          name: list.name,
+          color: list.color,
+          icon: list.icon,
+          isDefault: list.is_default,
+          orderIndex: list.order_index,
+          userId: list.user_id,
+          createdAt: list.created_at,
+          updatedAt: list.updated_at,
+        }));
+
+        return { success: true, data: formattedData };
       } catch (error) {
         console.error('获取列表失败:', error);
         return { success: false, error };
