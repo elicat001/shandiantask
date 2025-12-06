@@ -320,9 +320,9 @@ const TaskView: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full bg-white relative">
+    <div className="flex flex-col md:flex-row h-full w-full bg-white relative overflow-hidden">
       {/* Sidebar List Navigation */}
-      <div className="hidden md:flex w-64 bg-gray-50 border-r border-gray-200 flex-col h-full flex-shrink-0">
+      <div className="hidden md:flex w-48 lg:w-64 bg-gray-50 border-r border-gray-200 flex-col h-full flex-shrink-0 overflow-hidden">
         <div className="p-4 flex-shrink-0">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">智能清单</h2>
           <ul className="space-y-1">
@@ -427,9 +427,9 @@ const TaskView: React.FC = () => {
       </div>
 
       {/* Main Task Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
         {/* Header */}
-        <div className="h-14 md:h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
+        <div className="h-12 md:h-14 border-b border-gray-100 flex items-center justify-between px-3 md:px-6 flex-shrink-0">
            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
              {listNameMap[activeListId] || lists.find(l => l.id === activeListId)?.name || activeListId}
              <span className="text-sm font-normal text-gray-400">({activeTasks.length})</span>
@@ -451,7 +451,7 @@ const TaskView: React.FC = () => {
         </div>
 
         {/* Task Input (Hidden in selection mode for clarity, or kept visible) */}
-        <div className={`p-6 pb-2 transition-opacity duration-200 ${isSelectionMode ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`p-3 md:p-6 pb-2 transition-opacity duration-200 flex-shrink-0 ${isSelectionMode ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-sage-400 focus-within:border-transparent transition-all">
              <div className="flex items-center px-4 pt-3">
                <Plus size={20} className="text-gray-400 mr-3" />
@@ -580,7 +580,7 @@ const TaskView: React.FC = () => {
         </div>
 
         {/* Task List */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-3 md:px-6 pb-20 md:pb-6 min-h-0">
             {/* Active Tasks */}
             <div className="space-y-2 relative">
                 {activeTasks.length === 0 && completedTasks.length === 0 && (

@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./App.tsx",
     "./index.tsx",
+    "./src/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
     "./services/**/*.{js,ts,jsx,tsx}",
   ],
@@ -22,7 +23,20 @@ export default {
           800: '#2d4942',
           900: '#263d38',
         }
-      }
+      },
+      screens: {
+        'xs': '475px',
+        '3xl': '1920px',
+      },
+      height: {
+        'dynamic': '100dvh',
+      },
+      minHeight: {
+        'dynamic': '100dvh',
+      },
+      maxHeight: {
+        'dynamic': '100dvh',
+      },
     }
   },
   plugins: [],

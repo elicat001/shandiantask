@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 重置和基础样式 */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    @apply antialiased;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* 防止移动端浏览器地址栏影响 */
+  @supports (-webkit-touch-callout: none) {
+    .h-screen {
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+  }
+
+  /* 移动端安全区域适配 */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .pb-safe-plus {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    }
+  }
+}
+
+/* 自定义滚动条 */
+@layer utilities {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-50;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f9fafb;
+  }
+
+  /* 隐藏滚动条但保持可滚动 */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 响应式工具类 */
+@layer utilities {
+  /* 防止内容溢出 */
+  .contain-layout {
+    contain: layout style;
+  }
+
+  .contain-size {
+    contain: size layout style;
+  }
+
+  /* 弹性高度 */
+  .h-dynamic {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .min-h-dynamic {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .max-h-dynamic {
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 768px) {
+    .h-mobile {
+      height: calc(100vh - env(safe-area-inset-bottom));
+      height: calc(100dvh - env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* 动画类 */
+@layer utilities {
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-in {
+    animation: animateIn 0.2s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* 深色模式支持 */
+@layer utilities {
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* 修复flex布局问题 */
+@layer utilities {
+  .flex-fix {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .flex-1-fix {
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+/* 响应式文字大小 */
+@layer utilities {
+  .text-responsive {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+
+  .text-title-responsive {
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+  }
+}
