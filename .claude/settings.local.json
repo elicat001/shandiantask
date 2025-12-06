@@ -25,7 +25,10 @@
       "Bash(git fetch:*)",
       "Bash(git config:*)",
       "Bash(ping:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(timeout 30 git push origin main)",
+      "Bash(powershell:*)",
+      "Bash(start auto-push-background.bat)"
     ],
     "deny": [],
     "ask": []
